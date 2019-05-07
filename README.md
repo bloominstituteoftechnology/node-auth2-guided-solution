@@ -90,7 +90,7 @@ router.post('/login', (req, res) => {
 
 **wait for students to catch up**
 
-### You Do (estimated 5m to complete)
+### You Do (estimated 10m to complete)
 
 Open restricted middleware inside `./auth/restricted-middleware.js` and look for refactoring opportunities. Is there duplicate code? if there is, can we remove it?
 
