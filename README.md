@@ -85,7 +85,16 @@ router.post('/login', (req, res) => {
 - use Postman to register an user
 - login using the new user's credentials.
 - show the cookie in the cookies tab in Postman
-- clean up the restricted middleware inside `./auth/restricted-middleware.js`.
+- make a GET to `/api/users`. You're not logged in, because the server restarted and the session information is stored in memory.
+- login again and then visit `/api/users`, should see the list of users.
+
+**wait for students to catch up**
+
+### You Do (estimated 5m to complete)
+
+Open restricted middleware inside `./auth/restricted-middleware.js` and look for refactoring opportunities. Is there duplicate code? if there is, can we remove it?
+
+#### A possible solution
 
 ```js
 // this is all the content in the file, no need for bcrypt or Users anymore
@@ -99,11 +108,7 @@ module.exports = (req, res, next) => {
 };
 ```
 
-- make a GET to `/api/users`. You're not logged in, because the server restarted and the session information is stored in memory.
-- login again and then visit `/api/users`, should see the list of users.
-
 **wait for students to catch up**
-
 **time for a break? take 5 minutes**
 
 ## Implement Logout
