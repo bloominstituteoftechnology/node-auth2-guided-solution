@@ -39,9 +39,9 @@ const sessionConfig = {
   cookie: {
     maxAge: 1000 * 60 * 60, // how long is the session valid for, in milliseconds
     secure: false, // used over https only, should be true in production
+    httpOnly: true, // cannot access the cookie from JS using document.cookie
+    // keep this true unless there is a good reason to let JS access the cookie
   },
-  httpOnly: true, // cannot access the cookie from JS using document.cookie
-  // keep this true unless there is a good reason to let JS access the cookie
   resave: false, // keep it false to avoid recreating sessions that have not changed
   saveUninitialized: false, // GDPR laws against setting cookies automatically
 };
@@ -90,7 +90,9 @@ router.post('/login', (req, res) => {
 
 **wait for students to catch up**
 
-### You Do (estimated 10m to complete)
+For the next activity ask students to work on this for 3 minutes, then put them into breakout rooms for 5 mins to discuss their solutions. They are asked to rotate sharing their screen to discuss their approach.
+
+### Breakouts (estimated 10m to complete)
 
 Open restricted middleware inside `./auth/restricted-middleware.js` and look for refactoring opportunities. Is there duplicate code? if there is, can we remove it?
 

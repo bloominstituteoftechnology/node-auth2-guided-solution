@@ -15,8 +15,8 @@ const sessionConfig = {
   cookie: {
     maxAge: 1000 * 60 * 60,
     secure: false,
+    httpOnly: true,
   },
-  httpOnly: true,
   resave: false,
   saveUninitialized: false,
   store: new KnexSessionStore({
