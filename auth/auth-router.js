@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken'); // installed this library
 
+const secrets = require('../config/secrets.js');
 const Users = require('../users/users-model.js');
 
 // for endpoints beginning with /api/auth
@@ -25,9 +27,13 @@ router.post('/login', (req, res) => {
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        req.session.user = user;
+        const token = generateToken(user); // new line
+
+        // the server needs to return the token to the client
+        // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
-          message: `Welcome ${user.username}!, have a cookie!`,
+          message: `Welcome ${user.username}!, have a token...`,
+          token, // attach the token as part of the response
         });
       } else {
         res.status(401).json({ message: 'Invalid Credentials' });
@@ -38,20 +44,18 @@ router.post('/login', (req, res) => {
     });
 });
 
-router.get('/logout', (req, res) => {
-  if (req.session) {
-    req.session.destroy(err => {
-      if (err) {
-        res.send(
-          'you can checkout any time you like, but you can never leave....'
-        );
-      } else {
-        res.send('bye, thanks for playing');
-      }
-    });
-  } else {
-    res.end();
-  }
-});
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    roles: ['Student'],
+  };
+
+  const options = {
+    expiresIn: '1d',
+  };
+
+  return jwt.sign(payload, secrets.jwtSecret, options);
+}
 
 module.exports = router;
