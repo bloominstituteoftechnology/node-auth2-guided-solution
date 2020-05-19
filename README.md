@@ -1,6 +1,6 @@
-# Web Auth II Guided Project
+# Node Auth 2 Guided Project
 
-Guided project for **Web Auth II** Module.
+Guided project for **Node Auth 2** Module.
 
 ## Prerequisites
 
@@ -13,200 +13,206 @@ Guided project for **Web Auth II** Module.
 - [ ] type `yarn` or `npm i` to download dependencies.
 - [ ] type `yarn server` or `npm run server` to start the API.
 
-Please follow along as the instructor adds support for `sessions` and `cookies` to the API.
+Please follow along as the instructor adds support for `JSON Web Tokens (JWT)` to the API.
 
-## How to Contribute
+## Introduce the Module Challenge
 
-- clone the [starter code](https://github.com/LambdaSchool/webapi-i-guided).
-- create a solution branch: `git checkout -b solution`.
-- add this repository as a remote: `git remote add solution https://github.com/LambdaSchool/webapi-i-guided-solution`
-- pull from this repository's `master` branch into the `solution` branch in your local folder `git pull solution master:solution --force`.
+Walk students through the afternoon project. **Note that it is a two day project**. Server the first day and the React client the second day.
 
-A this point you should have a `master` branch pointing to the student's repository and a `solution` branch with the latest changes added to the solution repository.
+## Run Migrations
 
-When making changes to the `solution` branch, commit the changes and type `git push solution solution:master` to push them to this repository.
+**The database is not included, run the migrations to generate it.**
 
-When making changes to the `master` branch, commit the changes and use `git push origin master` to push them to the student's repository.
+## Introduce JWTs
 
-## Introduce Sessions and Cookies
+Use [jwt.io](https://jwt.io/) to introduce what JWTs are and how they are structured.
 
-Open TK and introduce students to `sessions` and `cookies` and how they help us keep user's logged in across requests.
+List the responsibilities of the server and client when using JWTs for authentication.
 
-Take time to walk through the authentication workflow when using `sessions`.
+### Server
 
-Cover the different ways of storing sessions, including the pros and cons of each.
+- produce the token
+- send the token to the client
 
-## Uses Sessions for Login
+- read, decode and verify the token
+- make the payload available to the rest of the api
 
-- add `express-session` to the project and require it at the top of `server.js`.
-- configure and use `express-session` globally inside `server.js`.
+### Client
 
-```js
-// other code unchanged
-const server = express();
+- store the token
+- send the token on every request
+- destroy token on logout
 
-// this object holds the configuration for the session
-const sessionConfig = {
-  name: 'monkey', // the default would be sid, but that would reveal our stack
-  secret: 'keep it secret, keep it safe!', // to encrypt/decrypt the cookie
-  cookie: {
-    maxAge: 1000 * 60 * 60, // how long is the session valid for, in milliseconds
-    secure: false, // used over https only, should be true in production
-    httpOnly: true, // cannot access the cookie from JS using document.cookie
-    // keep this true unless there is a good reason to let JS access the cookie
-  },
-  resave: false, // keep it false to avoid recreating sessions that have not changed
-  saveUninitialized: false, // GDPR laws against setting cookies automatically
-};
+## Produce and Send a Token
 
-// other middleware here
-server.use(session(sessionConfig));
-// endpoints below
-```
+Introduce the library we'll use to create and verify the tokens.
 
-Show the [documentation for the library on npmjs.org](https://www.npmjs.com/package/express-session) for different configuration options.
-
-Session support is configured, let's use it to store user information. Change the `/login` endpoint inside `auth-router.js` to read:
+- add `jsonwebtoken` to the project and require it into `auth-router.js`.
+- change the `/login` endpoint inside the `auth-router.js` to produce and send the token.
 
 ```js
-router.post('/login', (req, res) => {
+// ./auth/auth-router.js
+
+const jwt = require("jsonwebtoken"); // installed this library
+
+const secrets = require("../config/secrets.js");
+
+router.post("/login", (req, res) => {
   let { username, password } = req.body;
 
   Users.findBy({ username })
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        // req.session is an object added by the session middleware
-        // we can store information inside req.session
-        // req.session is available on every request done by the same client
-        // as long as the session has not expired
-        req.session.user = user;
+        const token = generateToken(user); // new line
+
+        // the server needs to return the token to the client
+        // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
-          // the cookie will be sent automatically by the library
-          message: `Welcome ${user.username}!, have a cookie!`,
+          message: `Welcome ${user.username}!, have a token...`,
+          token, // attach the token as part of the response
         });
       } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
+        res.status(401).json({ message: "Invalid Credentials" });
       }
     })
     .catch(error => {
       res.status(500).json(error);
     });
 });
+
+function generateToken(user) {
+  const payload = {
+    subject: user.id, // sub in payload is what the token is about
+    username: user.username,
+    // ...otherData
+  };
+
+  const options = {
+    expiresIn: "1d", // show other available options in the library's documentation
+  };
+
+  // extract the secret away so it can be required and used where needed
+  return jwt.sign(payload, secrets.jwtSecret, options); // this method is synchronous
+}
 ```
 
-- use Postman to register an user
-- login using the new user's credentials.
-- show the cookie in the cookies tab in Postman
-- make a GET to `/api/users`. You're not logged in, because the server restarted and the session information is stored in memory.
-- login again and then visit `/api/users`, should see the list of users.
-
-**wait for students to catch up**
-
-For the next activity ask students to work on this for 3 minutes, then put them into breakout rooms for 5 mins to discuss their solutions. They are asked to rotate sharing their screen to discuss their approach.
-
-### Breakouts (estimated 10m to complete)
-
-Open restricted middleware inside `./auth/restricted-middleware.js` and look for refactoring opportunities. Is there duplicate code? if there is, can we remove it?
-
-#### A possible solution
+- add the `./config/secrets.js` file to hold the `jwtSecret`
 
 ```js
-// this is all the content in the file, no need for bcrypt or Users anymore
-module.exports = (req, res, next) => {
-  // if the client is logged in, req.session.user will be set
-  if (req.session && req.session.user) {
-    next();
-  } else {
-    res.status(401).json({ message: 'You shall not pass!' });
-  }
+module.exports = {
+  jwtSecret: process.env.JWT_SECRET || "add a third table for many to many",
 };
 ```
 
+- register a user
+- login with the user and show the token
+- review the steps taken one more time.
+
 **wait for students to catch up**
+
 **time for a break? take 5 minutes**
 
-## Implement Logout
+## Read, Decode and Verify the Token
 
-Add the following endpoint to `auth-router.js`.
+Modify `./auth/restricted-middleware.js` to verify and decode the token.
 
 ```js
-router.get('/logout', (req, res) => {
-  if (req.session) {
-    // the library exposes the destroy method that will remove the session for the client
-    req.session.destroy(err => {
+const jwt = require("jsonwebtoken"); // installed this library
+
+const secrets = require("../config/secrets.js"); // another use for secrets
+
+module.exports = (req, res, next) => {
+  // tokens are commonly  sent as the authorization header
+  const token = req.headers.authorization;
+
+  if (token) {
+    // is it valid?
+    jwt.verify(token, secrets.jwtSecret, (err, decodedToken) => {
       if (err) {
-        res.send(
-          'you can checkout any time you like, but you can never leave....'
-        );
+        // the token is not valid
+        res.status(401).json({ you: "can't touch this!" });
       } else {
-        res.send('bye, thanks for playing');
+        // the token is valid and was decoded
+        req.decodedJwt = decodedToken; // make the token available to the rest of the API
+        console.log("decoded token", req.decodedJwt); // show this in the terminal
+
+        next();
       }
     });
   } else {
-    // if there is no session, just end the request or send a response
-    // we chose to just end the request for the example
-    res.end();
+    // no token? bounced!
+    res.status(401).json({ you: "shall not pass!" });
   }
-});
-```
-
-- login again
-- make a GET to `/api/users`
-- make a GET to `/api/auth/logout`
-- make a GET to `/api/users`, we're logged out!
-
-On logout, the server will void the session, so even if a client had held on to the cookie and send it again, the server will not let them through because the session associated with the cookie is no longer valid.
-
-**wait for students to catch up**
-
-- login
-- stop the server
-- start the server
-- make a GET to `/api/users`, we're not logged in! Bad panda.
-
-We will store session information in the database, that way if the server is restarted logged in users will not need to login again.
-
-## Store Sessions in a Database
-
-- introduce [the library used to connect knex to express-session](https://www.npmjs.com/package/connect-session-knex).
-- require it after `express-session`.
-
-```js
-const session = require('express-session');
-const KnexSessionStore = require('connect-session-knex')(session);
-// alternatively: const KnexSessionStore = require('connect-session-knex');
-// and then KnexSessionStore(session);
-```
-
-- change the session configuration object to use a database to store session information
-
-```js
-const sessionConfig = {
-  name: 'monkey',
-  secret: 'keep it secret, keep it safe!',
-  cookie: {
-    maxAge: 1000 * 60 * 60, // in ms
-    secure: false, // used over https only
-  },
-  httpOnly: true, // cannot access the cookie from js using document.cookie
-  resave: false,
-  saveUninitialized: false, // GDPR laws against setting cookies automatically
-
-  // we add this to configure the way sessions are stored
-  store: new KnexSessionStore({
-    knex: require('../database/dbConfig.js'), // configured instance of knex
-    tablename: 'sessions', // table that will store sessions inside the db, name it anything you want
-    sidfieldname: 'sid', // column that will hold the session id, name it anything you want
-    createtable: true, // if the table does not exist, it will create it automatically
-    clearInterval: 1000 * 60 * 60, // time it takes to check for old sessions and remove them from the database to keep it clean and performant
-  }),
 };
 ```
 
-- login
-- stop the server
-- start the server
-- make a GET to `/api/users`, we're still logged in!
+- make a GET to `/api/users` do not provide the authorization header. No access.
+- login, copy the token (take care to NOT copy the wrapping quotes).
+- make another GET to `/api/users`, but this time add the `Authorization header` with the token as the value. Success!
+- change a character in the token and try again. Fails verification and request is blocked.
+- review all steps one more time.
+
+**wait for students to catch up**
+
+**time for a break? take 5 minutes**
+
+## Optional. If Time Permits
+
+Write middleware that checks for the user's roles before providing access to an endpoint.
+
+- add a `./auth/check-role-middleware.js` file:
+
+```js
+// ./auth/check-role-middleware.js
+
+// accept the expected role
+module.exports = role => {
+  // return middleware
+  return function (req, res, next) {
+    // make sure the roles property is in the token's payload and that the desired role is present
+    if (req.decodedJwt.roles && req.decodedJwt.roles.includes(role)) {
+      next();
+    } else {
+      // return a 403 Forbidden, the user is logged in, but has no access
+      res.status(403).json({ you: "you have no power here!" });
+    }
+  };
+};
+```
+
+- use it for the `/api/users` endpoint
+
+```js
+// other code unchanged
+const checkRole = require('../auth/check-role-middleware.js');
+
+// router.get('/', restricted, (req, res) => {
+  router.get('/', restricted, checkRole('Student'), (req, res) => {
+    // other code unchanged
+```
+
+- make another GET to `/api/users`. Fails with the 403 error.
+- inside `auth-router.js` change the `generateToken()` function to add some fake roles to the users. Those roles will most likely come from the database, we're adding them manually for simplicity.
+
+```js
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    roles: ["Student"], // this would normally come from the database
+  };
+
+  const options = {
+    expiresIn: "1d",
+  };
+
+  return jwt.sign(payload, secrets.jwtSecret, options);
+}
+```
+
+- login again, to get a new token that includes the roles. The old token was generated without roles as part of the payload.
+- make a new GET request to `/api/users` using the new token. Should succeed.
+- review the steps one more time.
 
 **wait for students to catch up**
