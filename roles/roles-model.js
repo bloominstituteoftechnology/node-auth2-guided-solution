@@ -1,4 +1,4 @@
-const db = require('../database/dbConfig.js');
+const db = require("../database/connection.js");
 
 module.exports = {
   add,
@@ -8,21 +8,19 @@ module.exports = {
 };
 
 function find() {
-  return db('roles').select('id', 'name');
+  return db("roles").select("id", "name");
 }
 
 function findBy(filter) {
-  return db('roles').where(filter);
+  return db("roles").where(filter);
 }
 
 async function add(role) {
-  const [id] = await db('roles').insert(role);
+  const [id] = await db("roles").insert(role);
 
   return findById(id);
 }
 
 function findById(id) {
-  return db('roles')
-    .where({ id })
-    .first();
+  return db("roles").where({ id }).first();
 }
