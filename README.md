@@ -19,9 +19,13 @@ Please follow along as the instructor adds support for `JSON Web Tokens (JWT)` t
 
 Walk students through the afternoon project. **Note that it is a two day project**. Server the first day and the React client the second day.
 
-## Run Migrations
+## Run Migrations and Seeds
 
-**The database is not included, run the migrations to generate it.**
+**The database is not included, run the migrations to generate it.** Run the seeds to add the `admin` and `user` roles to the `roles` table.
+
+## Register users
+
+- register a user with role 1 (admin).
 
 ## Introduce JWTs
 
@@ -61,8 +65,7 @@ router.post("/login", (req, res) => {
   let { username, password } = req.body;
 
   Users.findBy({ username })
-    .first()
-    .then(user => {
+    .then(([user]) => {
       if (user && bcrypt.compareSync(password, user.password)) {
         const token = generateToken(user); // new line
 
@@ -83,17 +86,16 @@ router.post("/login", (req, res) => {
 
 function generateToken(user) {
   const payload = {
-    subject: user.id, // sub in payload is what the token is about
+    subject: user.id,
     username: user.username,
-    // ...otherData
+    role: user.role,
   };
 
   const options = {
-    expiresIn: "1d", // show other available options in the library's documentation
+    expiresIn: "1d",
   };
 
-  // extract the secret away so it can be required and used where needed
-  return jwt.sign(payload, secrets.jwtSecret, options); // this method is synchronous
+  return jwt.sign(payload, secrets.jwtSecret, options);
 }
 ```
 
@@ -166,12 +168,10 @@ Write middleware that checks for the user's roles before providing access to an 
 ```js
 // ./auth/check-role-middleware.js
 
-// accept the expected role
 module.exports = role => {
-  // return middleware
   return function (req, res, next) {
     // make sure the roles property is in the token's payload and that the desired role is present
-    if (req.decodedJwt.roles && req.decodedJwt.roles.includes(role)) {
+    if (req.decodedJwt.role && req.decodedJwt.role === role) {
       next();
     } else {
       // return a 403 Forbidden, the user is logged in, but has no access
@@ -188,31 +188,10 @@ module.exports = role => {
 const checkRole = require('../auth/check-role-middleware.js');
 
 // router.get('/', restricted, (req, res) => {
-  router.get('/', restricted, checkRole('Student'), (req, res) => {
+  router.get('/', restricted, checkRole('admin'), (req, res) => {
     // other code unchanged
 ```
 
-- make another GET to `/api/users`. Fails with the 403 error.
-- inside `auth-router.js` change the `generateToken()` function to add some fake roles to the users. Those roles will most likely come from the database, we're adding them manually for simplicity.
-
-```js
-function generateToken(user) {
-  const payload = {
-    subject: user.id,
-    username: user.username,
-    roles: ["Student"], // this would normally come from the database
-  };
-
-  const options = {
-    expiresIn: "1d",
-  };
-
-  return jwt.sign(payload, secrets.jwtSecret, options);
-}
-```
-
-- login again, to get a new token that includes the roles. The old token was generated without roles as part of the payload.
-- make a new GET request to `/api/users` using the new token. Should succeed.
-- review the steps one more time.
+- register another user with role 2 (user) and test the functionality.
 
 **wait for students to catch up**
