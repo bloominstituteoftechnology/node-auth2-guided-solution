@@ -3,10 +3,10 @@ exports.seed = function (knex) {
 
   const roles = [
     {
-      name: "user", // will get id 1
+      name: "admin", // will get id 1
     },
     {
-      name: "admin", // will get id 2
+      name: "user", // will get id 2
     },
   ];
 

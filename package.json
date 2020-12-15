@@ -1,13 +1,13 @@
 {
-  "name": "node-auth3-guided",
+  "name": "node-auth2-guided-solution",
   "version": "1.0.0",
-  "description": "Node Auth 3 Guided Project Solution",
   "main": "index.js",
   "scripts": {
     "server": "nodemon",
     "start": "node index.js",
     "migrate": "knex migrate:latest",
-    "seed": "knex seed:run"
+    "seed": "knex seed:run",
+    "ketchup": "git fetch && git reset --hard origin/lecture"
   },
   "keywords": [],
   "author": "Lambda School",
@@ -24,5 +24,9 @@
   "devDependencies": {
     "eslint": "^7.15.0",
     "nodemon": "^2.0.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LambdaSchool/node-auth2-guided-solution.git"
   }
 }

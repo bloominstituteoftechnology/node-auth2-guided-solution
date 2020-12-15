@@ -17,7 +17,7 @@ exports.up = function (knex) {
         .references("roles.id")
         .onDelete("RESTRICT")
         .onUpdate("CASCADE")
-        .defaultTo(1);
+        .defaultTo(2);
     });
 };
 
