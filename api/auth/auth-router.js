@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken"); // npm install
 
 const router = require("express").Router();
 
-const secrets = require("../config/secrets.js");
+const secrets = require("../../config/secrets.js");
 const Users = require("../users/users-model.js");
 const { isValid } = require("../users/users-service.js");
 
@@ -52,7 +52,7 @@ router.post("/login", (req, res) => {
         }
       })
       .catch(error => {
-        res.status(500).json(error);
+        res.status(500).json(error.message);
       });
   } else {
     res.status(400).json({

@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken'); // installed this library
 
-const secrets = require('../config/secrets.js'); // another use for secrets
+const secrets = require('../../config/secrets.js'); // another use for secrets
 
 module.exports = (req, res, next) => {
   const token = req.headers.authorization;
