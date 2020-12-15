@@ -6,7 +6,8 @@
 
 ## Register users
 
-- register a user with role 1 (admin).
+- register a user with role 1 (admin)
+- register a user with role 2 (user, this is the default role when creating a new user)
 
 ## Introduce JWTs
 
