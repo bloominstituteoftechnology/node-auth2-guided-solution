@@ -19,7 +19,6 @@ List the responsibilities of the server and client when using JWTs for authentic
 
 - produce the token
 - send the token to the client
-
 - read, decode and verify the token
 - make the payload available to the rest of the api
 
