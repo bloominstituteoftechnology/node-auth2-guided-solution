@@ -9,7 +9,7 @@ router.get("/", restricted, checkRole("user"), (req, res, next) => {
     .then(users => {
       res.json(users);
     })
-    .catch(next);
+    .catch(next); // our custom err handling middleware in server.js will trap this
 });
 
 module.exports = router;
