@@ -42,10 +42,10 @@ const jwt = require("jsonwebtoken"); // installed this library
 
 const secrets = require("../config/secrets.js");
 
-router.post("/login", (req, res) => {
+router.post('/login', checkCredentials, (req, res, next) => {
   let { username, password } = req.body;
 
-  Users.findBy({ username })
+  Users.findBy({ username }) // it would be nice to have middleware do this
     .then(([user]) => {
       if (user && bcrypt.compareSync(password, user.password)) {
         const token = generateToken(user); // new line
@@ -57,12 +57,10 @@ router.post("/login", (req, res) => {
           token, // attach the token as part of the response
         });
       } else {
-        res.status(401).json({ message: "Invalid Credentials" });
+        res.status(401).json({ message: 'Invalid Credentials' });
       }
     })
-    .catch(error => {
-      res.status(500).json(error);
-    });
+    .catch(next);
 });
 
 function generateToken(user) {
@@ -71,11 +69,9 @@ function generateToken(user) {
     username: user.username,
     role: user.role,
   };
-
   const options = {
-    expiresIn: "1d",
+    expiresIn: '1d',
   };
-
   return jwt.sign(payload, secrets.jwtSecret, options);
 }
 ```
@@ -174,5 +170,3 @@ const checkRole = require('../auth/check-role-middleware.js');
 ```
 
 - register another user with role 2 (user) and test the functionality.
-
-**wait for students to catch up**
