@@ -5,7 +5,7 @@ module.exports = role => {
       next();
     } else {
       // return a 403 Forbidden, the user is logged in, but has no access
-      res.status(403).json({ you: "you have no power here!" });
+      res.status(403).json({ message: "You have no power here!" });
     }
   };
 };

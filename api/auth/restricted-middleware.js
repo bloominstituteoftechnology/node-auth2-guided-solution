@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
   if (token) {
     jwt.verify(token, secrets.jwtSecret, (err, decodedToken) => {
       if (err) {
-        res.status(401).json({ you: "can't touch this!" });
+        res.status(401).json({ message: "You can't touch this!" });
       } else {
         req.decodedJwt = decodedToken;
         console.log('decoded token', req.decodedJwt);
@@ -17,6 +17,6 @@ module.exports = (req, res, next) => {
       }
     });
   } else {
-    res.status(401).json({ you: 'shall not pass!' });
+    res.status(401).json({ message: 'You shall not pass!' });
   }
 };

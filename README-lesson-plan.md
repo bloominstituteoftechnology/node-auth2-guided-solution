@@ -4,6 +4,8 @@
 
 **The database is not included, run the migrations to generate it.** Run the seeds to add the `admin` and `user` roles to the `roles` table.
 
+A simple HTML auth form saved inside the `client` folder can be loaded on `http://localhost:5000/` to test out the functionality we build today.
+
 ## Register users
 
 - register a user with role 1 (admin)

@@ -19,7 +19,9 @@ router.post('/register', checkCredentials, (req, res, next) => {
 
   Users.add(user)
     .then(saved => {
-      res.status(201).json(saved);
+      res.status(201).json({
+        message: `Great to have you, ${saved.username}`,
+      });
     })
     .catch(next); // our custom err handling middleware in server.js will trap this
 });
@@ -35,7 +37,7 @@ router.post('/login', checkCredentials, (req, res, next) => {
         // the server needs to return the token to the client
         // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
-          message: `Welcome ${user.username}!, have a token...`,
+          message: `Welcome back ${user.username}, have a token...`,
           token, // attach the token as part of the response
         });
       } else {
