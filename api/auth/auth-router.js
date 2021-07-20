@@ -5,9 +5,9 @@ const router = require('express').Router();
 
 const secrets = require('../../config/secrets.js');
 const Users = require('../users/users-model.js');
-const checkCredentials = require('./check-payload-middleware');
+const checkAuthPayload = require('./check-payload-middleware');
 
-router.post('/register', checkCredentials, (req, res, next) => {
+router.post('/register', checkAuthPayload, (req, res, next) => {
   let user = req.body;
 
   // bcrypting the password before saving
@@ -26,7 +26,7 @@ router.post('/register', checkCredentials, (req, res, next) => {
     .catch(next); // our custom err handling middleware in server.js will trap this
 });
 
-router.post('/login', checkCredentials, (req, res, next) => {
+router.post('/login', checkAuthPayload, (req, res, next) => {
   let { username, password } = req.body;
 
   Users.findBy({ username }) // it would be nice to have middleware do this
