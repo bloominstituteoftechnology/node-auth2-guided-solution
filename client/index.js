@@ -46,8 +46,10 @@ const logout = evt => {
 
 const getUsers = evt => {
   evt.preventDefault()
+  const token = localStorage.getItem('token')
+
   fetch(`/api/users`, {
-    headers: { 'Authorization': localStorage.getItem('token') },
+    headers: token ? { 'Authorization': token } : {},
   })
     .then(res => {
       return res.json()
