@@ -8,8 +8,7 @@ A simple HTML auth form saved inside the `client` folder can be loaded on `http:
 
 ## Register users
 
-- register a user with role 1 (admin)
-- register a user with role 2 (user, this is the default role when creating a new user)
+- register a user with role 2 (a user with role 1 is seeded in the db)
 
 ## Introduce JWTs
 
@@ -38,52 +37,54 @@ Introduce the library we'll use to create and verify the tokens.
 - change the `/login` endpoint inside the `auth-router.js` to produce and send the token.
 
 ```js
-// ./auth/auth-router.js
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken') // npm install
 
-const jwt = require("jsonwebtoken"); // installed this library
+const router = require('express').Router()
+const User = require('../users/users-model.js')
 
-const secrets = require("../config/secrets.js");
+const { BCRYPT_ROUNDS, JWT_SECRET } = require('../../config')
 
-router.post('/login', checkCredentials, (req, res, next) => {
-  let { username, password } = req.body;
+router.post('/login', (req, res, next) => {
+  let { username, password } = req.body
 
-  Users.findBy({ username }) // it would be nice to have middleware do this
+  User.findBy({ username })
     .then(([user]) => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        const token = generateToken(user); // new line
-
+        const token = generateToken(user) // new line
         // the server needs to return the token to the client
         // this doesn't happen automatically like it happens with cookies
         res.status(200).json({
-          message: `Welcome ${user.username}!, have a token...`,
+          message: `Welcome back ${user.username}, have a token...`,
           token, // attach the token as part of the response
-        });
+        })
       } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
+        next({ status: 401, message: 'Invalid Credentials' })
       }
     })
-    .catch(next);
-});
+    .catch(next)
+})
 
 function generateToken(user) {
   const payload = {
     subject: user.id,
     username: user.username,
     role: user.role,
-  };
+  }
   const options = {
     expiresIn: '1d',
-  };
-  return jwt.sign(payload, secrets.jwtSecret, options);
+  }
+  return jwt.sign(payload, JWT_SECRET, options)
 }
 ```
 
-- add the `./config/secrets.js` file to hold the `jwtSecret`
+- use the `./config/index.js` file to hold the `JWT_SECRET`:
 
 ```js
 module.exports = {
-  jwtSecret: process.env.JWT_SECRET || "add a third table for many to many",
-};
+  JWT_SECRET: process.env.JWT_SECRET || 'add a third table for many to many',
+  // etc
+}
 ```
 
 - register a user
@@ -96,36 +97,28 @@ module.exports = {
 
 ## Read, Decode and Verify the Token
 
-Modify `./auth/restricted-middleware.js` to verify and decode the token.
+Modify `./auth/auth-middleware.js` to verify and decode the token.
 
 ```js
-const jwt = require("jsonwebtoken"); // installed this library
+const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = require('../../config')
 
-const secrets = require("../config/secrets.js"); // another use for secrets
-
-module.exports = (req, res, next) => {
-  // tokens are commonly  sent as the authorization header
-  const token = req.headers.authorization;
-
+const restricted = (req, res, next) => {
+  const token = req.headers.authorization
   if (token) {
-    // is it valid?
-    jwt.verify(token, secrets.jwtSecret, (err, decodedToken) => {
+    jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
       if (err) {
-        // the token is not valid
-        res.status(401).json({ you: "can't touch this!" });
+        next({ status: 401, message: "You can't touch this!" })
       } else {
-        // the token is valid and was decoded
-        req.decodedJwt = decodedToken; // make the token available to the rest of the API
-        console.log("decoded token", req.decodedJwt); // show this in the terminal
-
-        next();
+        req.decodedJwt = decodedToken
+        console.log('decoded token', req.decodedJwt)
+        next()
       }
-    });
+    })
   } else {
-    // no token? bounced!
-    res.status(401).json({ you: "shall not pass!" });
+    next({ status: 401, message: 'You shall not pass!' })
   }
-};
+}
 ```
 
 - make a GET to `/api/users` do not provide the authorization header. No access.
@@ -142,33 +135,33 @@ module.exports = (req, res, next) => {
 
 Write middleware that checks for the user's roles before providing access to an endpoint.
 
-- add a `./auth/check-role-middleware.js` file:
+- edit `./auth/auth-middleware.js` file:
 
 ```js
-// ./auth/check-role-middleware.js
-
-module.exports = role => {
-  return function (req, res, next) {
-    // make sure the roles property is in the token's payload and that the desired role is present
-    if (req.decodedJwt.role && req.decodedJwt.role === role) {
-      next();
-    } else {
-      // return a 403 Forbidden, the user is logged in, but has no access
-      res.status(403).json({ you: "you have no power here!" });
-    }
-  };
-};
+const checkRole = role => (req, res, next) => {
+  // make sure the roles property is in the token's payload and that the desired role is present
+  if (req.decodedJwt.role && req.decodedJwt.role === role) {
+    next()
+  } else {
+    // return a 403 Forbidden, the user is logged in, but has no access
+    next({ status: 403, message: "You have no power here!" })
+  }
+}
 ```
 
 - use it for the `/api/users` endpoint
 
 ```js
 // other code unchanged
-const checkRole = require('../auth/check-role-middleware.js');
+const { restricted, checkRole } = require('../auth/auth-middleware')
 
-// router.get('/', restricted, (req, res) => {
-  router.get('/', restricted, checkRole('admin'), (req, res) => {
-    // other code unchanged
+router.get("/", restricted, checkRole("admin"), (req, res, next) => {
+  Users.find()
+    .then(users => {
+      res.json(users)
+    })
+    .catch(next)
+})
 ```
 
 - register another user with role 2 (user) and test the functionality.

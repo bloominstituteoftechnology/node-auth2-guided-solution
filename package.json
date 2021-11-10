@@ -7,7 +7,8 @@
     "migrate": "knex migrate:latest",
     "rollback": "knex migrate:rollback",
     "seed": "knex seed:run",
-    "ketchup": "git fetch && git reset --hard origin/lecture"
+    "ketchup": "git fetch && git reset --hard origin/lecture",
+    "resetdb": "npm run rollback && npm run migrate && npm run seed"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -20,7 +21,7 @@
   },
   "devDependencies": {
     "eslint": "^8.2.0",
-    "nodemon": "^2.0.14"
+    "nodemon": "^2.0.15"
   },
   "repository": {
     "type": "git",
